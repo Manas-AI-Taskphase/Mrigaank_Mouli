@@ -33,6 +33,7 @@ bool operator==(const Node& a, const Node& b) {
 
 std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<int>>& map, int width, int height) {
     std::vector<Node*> path;
+    std::vector<Node*> closed;
 
     std::priority_queue<Node*, std::vector<Node*>, NodeComparator> open;
     start->cost = 0;
@@ -45,6 +46,8 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
         
         std::cout<<current->x<<"   "<<current->y<<std::endl;
         std::cout<<goal->x<<"    "<<goal->y<<std::endl;
+
+	closed.push_back(current)
         
         if (*current == *goal) {
             while (current != nullptr) {
@@ -55,7 +58,7 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
             std::reverse(path.begin(), path.end());
             break;
         }
-
+	      
         for (int dx = -1; dx <= 1; ++dx) {
             for (int dy = -1; dy <= 1; ++dy) {
                 if (dx == 0 && dy == 0) continue;
@@ -68,7 +71,16 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
                     double heuristic = std::sqrt(std::pow(goal->x - nx, 2) + std::pow(goal->y - ny, 2));
 
                     Node* neighbor = new Node(nx, ny, new_cost, current);
+		    //Check if the neighbor is already in the closed set
 
+		    bool inClosed = false;
+                    for ( Node* node: closed)
+			    {
+				    if (*neighbor == *node)
+					    inClosed = true;
+			    }	    
+                   if (inClosed)
+			   break;
                     // Check if the neighbor is already in the open set
        
                     std::priority_queue<Node*, std::vector<Node*>, NodeComparator> openCopy=open;
