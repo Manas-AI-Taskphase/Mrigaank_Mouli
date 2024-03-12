@@ -23,7 +23,7 @@ struct Node {
 
 struct NodeComparator {
     bool operator()(const Node* a, const Node* b) const {
-        return a->cost + a->heuristic > b->cost + b->heuristic;
+        return (a->cost + a->heuristic) > (b->cost + b->heuristic);
     }
 };
 
@@ -42,7 +42,10 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
     while (!open.empty()) {
         Node* current = open.top();
         open.pop();
-
+        
+        std::cout<<current->x<<"   "<<current->y<<std::endl;
+        std::cout<<goal->x<<"    "<<goal->y<<std::endl;
+        
         if (*current == *goal) {
             while (current != nullptr) {
                 path.push_back(current);
@@ -70,13 +73,14 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
        
                     std::priority_queue<Node*, std::vector<Node*>, NodeComparator> openCopy=open;
 
+		     bool InopenSet = false;
                     while (!openCopy.empty()) {
                         Node* openNode = openCopy.top();
                         openCopy.pop();
 
                         if (*neighbor == *openNode) {
                             
-
+                            InopenSet = true;
                             // Compare costs and update if the new cost is lower
                             if (new_cost < openNode->cost) {
                                 openNode->cost = new_cost;
@@ -88,6 +92,11 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
 
                             break;
                         }
+                    }
+                    if (!InopenSet)
+                    {
+                       neighbor->heuristic = heuristic;
+                    	open.push(neighbor);
                     }
 
                 }
@@ -118,8 +127,8 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
         }
     }
 
-    Node* start = new Node(10, 10, 0, nullptr);
-    Node* goal = new Node(50, 50, 0, nullptr);
+    Node* start = new Node(0, 0, 0, nullptr);
+    Node* goal = new Node(60, 30, 0, nullptr);
 
     std::vector<Node*> path = AStar(start, goal, map, width, height);
 
