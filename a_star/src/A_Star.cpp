@@ -33,7 +33,7 @@ bool operator==(const Node& a, const Node& b) {
 
 std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<int>>& map, int width, int height) {
     std::vector<Node*> path;
-    std::vector<Node*> closed;
+    std::vector<std::vector<bool>> closed(height, std::vector<bool>(width, false));
 
     std::priority_queue<Node*, std::vector<Node*>, NodeComparator> open;
     start->cost = 0;
@@ -47,7 +47,6 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
         std::cout<<current->x<<"   "<<current->y<<std::endl;
         std::cout<<goal->x<<"    "<<goal->y<<std::endl;
 
-	closed.push_back(current);
         
         if (*current == *goal) {
             while (current != nullptr) {
@@ -59,6 +58,8 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
             break;
         }
 	      
+	     closed[current->y][current->x] = true;
+	      
         for (int dx = -1; dx <= 1; ++dx) {
             for (int dy = -1; dy <= 1; ++dy) {
                 if (dx == 0 && dy == 0) continue;
@@ -66,21 +67,13 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
                 int nx = current->x + dx;
                 int ny = current->y + dy;
 
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height && map[ny][nx] == 0) {
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height && map[ny][nx] == 0 && !closed[ny][nx]) {
                     double new_cost = current->cost + std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
                     double heuristic = std::sqrt(std::pow(goal->x - nx, 2) + std::pow(goal->y - ny, 2));
 
                     Node* neighbor = new Node(nx, ny, new_cost, current);
 		    //Check if the neighbor is already in the closed set
 
-		    bool inClosed = false;
-                    for ( Node* node: closed)
-			    {
-				    if (*neighbor == *node)
-					    inClosed = true;
-			    }	    
-                   if (inClosed)
-			   break;
                     // Check if the neighbor is already in the open set
        
                     std::priority_queue<Node*, std::vector<Node*>, NodeComparator> openCopy=open;
@@ -140,7 +133,7 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
     }
 
     Node* start = new Node(0, 0, 0, nullptr);
-    Node* goal = new Node(60, 30, 0, nullptr);
+    Node* goal = new Node(49, 49, 0, nullptr);
 
     std::vector<Node*> path = AStar(start, goal, map, width, height);
 
@@ -161,6 +154,7 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
         ROS_WARN("No valid path found.");
     } else {
         path_pub.publish(path_msg);
+        std::cout<<"path published"<<std::endl;
     }
 
     cleanupNodes(path);
@@ -175,4 +169,3 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-
