@@ -47,7 +47,7 @@ std::vector<Node*> AStar(Node* start, Node* goal, const std::vector<std::vector<
         std::cout<<current->x<<"   "<<current->y<<std::endl;
         std::cout<<goal->x<<"    "<<goal->y<<std::endl;
 
-	closed.push_back(current)
+	closed.push_back(current);
         
         if (*current == *goal) {
             while (current != nullptr) {
