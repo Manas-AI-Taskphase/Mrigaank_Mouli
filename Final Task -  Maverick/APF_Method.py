@@ -49,6 +49,19 @@ def arm_and_takeoff(TargetAltitude):
 
 arm_and_takeoff(12)
 
+def send_local_ned_velocity(vx,vy,vz):
+    msg = vehicle.message_factory.set_position_target_local_ned_encode(
+         0,
+         0,0,
+         mavutil.mavlink.MAV_FRAME_LOCAL_NED,
+         0b0000111111000111,
+         0, 0, 0,
+         vx,vy,vz,
+         0,0,0,
+         0,0        
+    )
+    vehicle.send_mavlink(msg)
+    vehicle.flush()
 
 k_att = 50.0  # Attractive force coefficient
 k_rep = 200.0  # Repulsive force coefficient
@@ -102,16 +115,16 @@ def APF_callback(point_cloud):
         current_position = np.array([vehicle.location.global_frame.lat, vehicle.location.global_frame.lon, vehicle.location.global_frame.alt])
         new_goal_dist = np.linalg.norm(current_position - goal_position)
 
-        client.moveByVelocityAsync(*linear_velocities,duration = dt)
+        send_local_ned_velocity(linear_velocities[0],linear_velocities[1],linear_velocities[2])
+        
         print(new_goal_dist)
-        if new_goal_dist < 0.00001:  
+        if new_goal_dist < 0.0001:  
             break
-    subscriber.unregister()
-
+        print("Target location reached")
+        vehicle.mode = dronekit.VehicleMode("LAND")
 
 rospy.init_node('listener', anonymous=True)
 subscriber = rospy.Subscriber("RANSAC_topic", PointCloud2, APF_callback)
 rospy.spin()
 
-print("Target location reached")
 
